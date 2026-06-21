@@ -1,8 +1,8 @@
 // #include <Arduino.h>
 // #include <WiFi.h>
 
-// const char *ssid = "nadin";
-// const char *password = "12345678";
+// const char *ssid = "samoanja";
+// const char *password = "samoanja25";
 
 // void setup()
 // {
