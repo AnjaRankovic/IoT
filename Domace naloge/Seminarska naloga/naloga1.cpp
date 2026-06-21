@@ -3,12 +3,12 @@
  #include "WebSocketsClient.h"
  #include <ArduinoJson.h>
 
- // --- TVOJI PODACI ZA WIFI I SERVER ---
+ // --- PODACI ZA WIFI I SERVER ---
  const char *ssid = "samoanja";
  const char *password = "samoanja25";
  const char *serverIP = "192.168.1.205"; // IP adresa tvog Windows servera 
 
- // --- TVOJ TOČAN RASPORED PINOVA SA PLOČICE ---
+ // --- TAČAN RASPORED PINOVA SA PLOČICE ---
  const int pinGlavnaLED = 5;    // Žuta LED
  const int pinRezervnaLED = 18; // Zelena LED
  const int pinPlavaLED = 12;    // Vanjska Plava LED
