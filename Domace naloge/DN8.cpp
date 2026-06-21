@@ -3,8 +3,8 @@
 // #include <WebSocketsClient.h>
 // #include <ArduinoJson.h>
 
-// const char *ssid = "nadin";
-// const char *password = "12345678";
+// const char *ssid = "samoanja";
+// const char *password = "samoanja25";
 
 // int portNumber = 8080;
 // WebSocketsClient webSocket;
