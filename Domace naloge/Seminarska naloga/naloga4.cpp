@@ -5,7 +5,7 @@
 
 // const char *ssid = "samoanja";
 // const char *password = "samoanja25";
-// const char *serverIP = "192.168.1.205.48";
+// const char *serverIP = "192.168.1.205";
 
 // const int pinPotenciometar = 34;
 
