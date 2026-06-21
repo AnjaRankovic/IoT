@@ -2,8 +2,8 @@
 // #include <WiFi.h>
 // #include <WebServer.h>
 
-// const char *ssid = "nadin";
-// const char *password = "12345678";
+// const char *ssid = "samoanja";
+// const char *password = "samoanja25";
 
 // WebServer server(80);
 
@@ -17,7 +17,7 @@
 //     server.send(200, "text/html; charset=UTF-8", "abcčdefghijklmnoprsštuvzž");
 // }
 
-// void handle_cifre()
+// void handle_stevilke()
 // {
 //     server.send(200, "text/html", "0123456789");
 // }
@@ -40,7 +40,7 @@
 
 //     server.on("/", handle_root);
 //     server.on("/abeceda", handle_abeceda);
-//     server.on("/cifre", handle_cifre);
+//     server.on("/stevilke", handle_cifre);
 //     server.begin();
 
 //     Serial.println("HTTP strežnik je zagnan, vpišite IP naslov v brskalnik, npr. http://10.252.254.63/ http in ne https.");
