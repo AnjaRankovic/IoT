@@ -1,154 +1,101 @@
 // #include <Arduino.h>
-// #include "WiFi.h"
-// #include "WebServer.h"
-// #include <WiFiAP.h>
+// #include <WiFi.h>
+// #include <WebSocketsClient.h>
+// #include <ArduinoJson.h>
 
-// const char *ssid = "samoanja";
-// const char *password = "samoanja25";
+// const char *ssid = "nadin";
+// const char *password = "12345678";
 
-// WebServer server(80);
+// int portNumber = 8811;
+// WebSocketsClient webSocket;
 
-// uint8_t LED1pin = 2;
-// bool LED1status = LOW;
+// String dataString;
+// const int nozicaPotenciometra = 34;
+// int vrednostPotenciometra = 0;
+// int prethodnaVrednost = 0;
 
-// String HTML0 = "<!DOCTYPE html>\
-// <html>\
-//     <head>\
-//         <meta charset='UTF-8'>\
-//         <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>\
-//         <style>\
-//             html {font-family: Helvetica; text-align: center;}\
-//             body {margin-top: 50px;}\
-//             h1 {color: #444444; margin: 50px auto 30px; }\
-//             h3 {color: #444444; margin-bottom: 50px;}\
-//             .gumb{background-color:blue; display: block; width: 200px; color: white; padding: 13px 30px; text-decoration: none; font-size: 25px; margin: 0px auto 35px; cursor: pointer; border-radius: 4px; border: none;}\
-//             p {font-size: 16px; color: #222222; margin-bottom: 10px;}\
-//         </style>\
-//     </head>\
-//     <body>\
-//         <h1>ESP32 spletni streznik</h1>\
-//         <h3>Priklop na WiFi usmerjevalnik.</h3>\
-//         <a class='gumb' href='/1'>Prizgi LED</a>\
-//         <a class='gumb' href='/0'>Ugasni LED</a>\
-//         <p>Prejet ukaz za vklop LED diode.</p>\
-//     </body>\
-// </html>";
-
-// String HTML1 = "<!DOCTYPE html>\
-// <html>\
-//     <head>\
-//         <meta charset='UTF-8'>\
-//         <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>\
-//         <style>\
-//             html {font-family: Helvetica; text-align: center;}\
-//             body {margin-top: 50px;}\
-//             h1 {color: #444444; margin: 50px auto 30px; }\
-//             h3 {color: #444444; margin-bottom: 50px;}\
-//             .gumb{background-color:blue; display: block; width: 200px; color: white; padding: 13px 30px; text-decoration: none; font-size: 25px; margin: 0px auto 35px; cursor: pointer; border-radius: 4px; border: none;}\
-//             p {font-size: 16px; color: #222222; margin-bottom: 10px;}\
-//         </style>\
-//     </head>\
-//     <body>\
-//         <h1>ESP32 spletni streznik</h1>\
-//         <h3>Priklop na WiFi usmerjevalnik.</h3>\
-//         <a class='gumb' href='/1'>Prizgi LED</a>\
-//         <a class='gumb' href='/0'>Ugasni LED</a>\
-//         <p>Prejet ukaz za vklop LED diode.</p>\
-//     </body>\
-// </html>";
-
-// String HTML3 = "<!DOCTYPE html>\
-// <html>\
-//     <head>\
-//         <meta charset='UTF-8'>\
-//         <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>\
-//         <style>\
-//             html {font-family: Helvetica; text-align: center;}\
-//             body {margin-top: 50px;}\
-//             h1 {color: #444444; margin: 50px auto 30px; }\
-//             h3 {color: #444444; margin-bottom: 50px;}\
-//             .gumb{background-color:blue; display: block; width: 200px; color: white; padding: 13px 30px; text-decoration: none; font-size: 25px; margin: 0px auto 35px; cursor: pointer; border-radius: 4px; border: none;}\
-//             p {font-size: 16px; color: #222222; margin-bottom: 10px;}\
-//         </style>\
-//     </head>\
-//     <body>\
-//         <h1>ESP32 spletni streznik</h1>\
-//         <h3>Priklop na WiFi usmerjevalnik.</h3>\
-//         <a class='gumb' href='/1'>Prizgi LED</a>\
-//         <a class='gumb' href='/0'>Ugasni LED</a>\
-//         <p>HTTP streznik je zagnan.</p>\
-//     </body>\
-// </html>";
-
-// void handle_root()
+// void onWebSocketEvent(WStype_t type, uint8_t *payload, size_t length)
 // {
-//     server.send(200, "text/html", HTML3);
-// }
+//     switch (type)
+//     {
+//     case WStype_TEXT:
+//         JsonDocument doc;
+//         DeserializationError error = deserializeJson(doc, payload);
 
-// void handle_led1on()
-// {
-//     LED1status = HIGH;
-//     Serial.println("GPIO2 Statuts: ON");
-//     server.send(200, "text/html", HTML1);
-// }
+//         if (error)
+//         {
+//             Serial.print(F("deserializeJson() failed: "));
+//             Serial.println(error.c_str());
+//             return;
+//         }
 
-// void handle_led1off()
-// {
-//     LED1status = LOW;
-//     Serial.println("GPIO2 Statuts: OFF");
-//     server.send(200, "text/html", HTML0);
-// }
+//         const char *tip = doc["tipSporocila"];
 
-// void handle_NotFound()
-// {
-//     server.send(200, "text/html", "Spletna stran ni bila najdena.");
+//         if (strcmp(tip, "LED") == 0)
+//         {
+//             int pin = doc["pin"];
+//             int vrednost = doc["vrednost"];
+
+//             if (pin == 2)
+//             {
+//                 digitalWrite(2, vrednost == 1 ? HIGH : LOW);
+//                 Serial.print("LED na pin 2 ");
+//                 Serial.println(vrednost == 1 ? "UKLJUCEN" : "ISKLJUCEN");
+//             }
+//             else
+//             {
+//                 Serial.println("Neprepoznata vrednost u JSON sporocilu!");
+//             }
+//             break;
+//         }
+//     }
 // }
 
 // void setup()
 // {
-//     pinMode(LED1pin, OUTPUT);
-//     delay(100);
-
 //     Serial.begin(115200);
 
-//     WiFi.softAP(ssid, password);
-//     delay(100);
-
-//     Serial.println("Vspostavitev programske dostopne tocke na ESP32");
-//     Serial.print("IP naslov esp32 dostopne tocke je: ");
-//     Serial.println(WiFi.softAPIP());
-
-//     server.on("/", handle_root);
-//     server.on("/0", handle_led1off);
-//     server.on("/1", handle_led1on);
-//     server.onNotFound(handle_NotFound);
-//     server.begin();
-//     Serial.print("HTTP strežnik je zagnan, vpišite IP naslov v brskalnik");
-//     delay(500);
+//     Serial.println("Povezovanje na WiFi omrezje...");
+//     WiFi.begin(ssid, password);
+//     while (WiFi.status() != WL_CONNECTED)
+//     {
+//         delay(500);
+//         Serial.print(".");
+//     }
+//     Serial.println();
+//     Serial.println("Povezano na WiFi omrezje!");
+//     Serial.print("IP naslov naprave: ");
+//     Serial.println(WiFi.localIP());
 
 //     pinMode(2, OUTPUT);
-//     digitalWrite(2, HIGH);
-//     delay(750);
-//     digitalWrite(2, LOW);
-//     delay(750);
-//     digitalWrite(2, HIGH);
-//     delay(750);
-//     digitalWrite(2, LOW);
+
+//     digitalWrite(2, 1);
+//     delay(500);
+//     digitalWrite(2, 0);
+//     delay(500);
+//     digitalWrite(2, 1);
+//     delay(500);
+//     digitalWrite(2, 0);
+
+//     webSocket.begin("10.252.254.48", 8811);
+//     delay(1000);
+//     webSocket.onEvent(onWebSocketEvent);
 // }
 
 // void loop()
 // {
+//     webSocket.loop();
 
-//     server.handleClient();
+//     vrednostPotenciometra = analogRead(nozicaPotenciometra);
 
-//     if (LED1status)
+//     if (abs(vrednostPotenciometra - prethodnaVrednost) > 10)
 //     {
-//         digitalWrite(LED1pin, HIGH);
-//     }
-//     else
-//     {
-//         digitalWrite(LED1pin, LOW);
+//         Serial.println(vrednostPotenciometra);
+//         dataString = R"({"tipSporocila":"potenciometar","pin":34,"vrednost":)";
+//         dataString = dataString + String(vrednostPotenciometra) + "}";
+//         webSocket.sendTXT(dataString);
+//         prethodnaVrednost = vrednostPotenciometra;
 //     }
 
-//     delay(4);
+//     delay(50);
 // }
