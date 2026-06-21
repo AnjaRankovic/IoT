@@ -6,7 +6,7 @@
 // // --- TVOJI PODACI ZA WIFI I LINUX SERVER ---
 // const char *ssid = "samoanja";
 // const char *password = "samoanja25";
-// const char *serverIP = "192.168.1.205.48"; // Tvoj Windows IP (.48)
+// const char *serverIP = "192.168.1.205"; // Tvoj Windows IP
 
 // // --- JASNO DEFINIRANI PINOVI ---
 // const int pinGlavnaLED = 4;        // Žuta LED je na PINU 4
