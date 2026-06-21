@@ -43,7 +43,7 @@
 //     server.on("/stevilke", handle_cifre);
 //     server.begin();
 
-//     Serial.println("HTTP strežnik je zagnan, vpišite IP naslov v brskalnik, npr. http://10.252.254.63/ http in ne https.");
+//     Serial.println("HTTP strežnik je zagnan, vpišite IP naslov v brskalnik, npr. http://192.168.1.205/ http in ne https.");
 
 //     pinMode(2, OUTPUT);
 //     digitalWrite(2, HIGH);
