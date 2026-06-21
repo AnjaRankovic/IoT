@@ -1,122 +1,119 @@
 // #include <Arduino.h>
-// #include <WiFi.h>
-// #include <WebServer.h>
-// #include <WebSocketsServer.h>
+// #include "WiFi.h"
+// #include "WebServer.h"
+// #include "WebSocketsClient.h"
+// #include <ArduinoJson.h>
 
 // const char *ssid = "samoanja";
 // const char *password = "samoanja25";
 
-// WebServer server(80);
-// WebSocketsServer webSocket = WebSocketsServer(81);
+// int portNumber = 8811;
+// const int nozicaFotoupornika = 32;
 
-// uint8_t LED1pin = 2;
-// bool LED1status = LOW;
+// int vrednostFotoupornika;
+// int prethodnaVrednost = 0;
+// String dataString;
 
-// const char HTML[] PROGMEM = R"rawliteral(
-// <!DOCTYPE html>
-// <html lang="sl">
-// <head>
-//     <meta charset="UTF-8">
-//     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//     <title>WebSocket</title>
-// </head>
-// <body>
-// <h2>Primer s spletnim vtičnikom WebSocket</h2>
-// <button onclick="prižgi()">Prižgi LED</button>
-// <button onclick="ugasni()">Ugasni LED</button>
-// <script>
-// let povezava = new WebSocket("ws://10.252.254.63:81/");
-// function prižgi(){
-//     povezava.send("1");
-// }
-// function ugasni(){
-//     povezava.send("0");
-// }
-// </script>
-// </body>
-// </html>
-// )rawliteral";
+// WebSocketsClient webSocket;
 
-// void handle_root()
-// {
-//     server.send(200, "text/html", HTML);
-// }
-
-// void onWebSocketEvent(uint8_t num, WStype_t type, uint8_t *payload, size_t length)
-// {
-//     switch (type)
-//     {
-//     case WStype_DISCONNECTED:
-//     {
-//         Serial.printf("[%u] Klient odklopljen!\n", num);
-//     }
-//     break;
-
-//     case WStype_CONNECTED:
-//     {
-//         IPAddress ip = webSocket.remoteIP(num);
-//         Serial.printf("[%u] Vzpostavljena WebSocket povezava iz IP naslova!\n", num);
-//         Serial.println(ip.toString());
-//     }
-//     break;
-
-//     case WStype_TEXT:
-//     {
-//         Serial.printf("[%u] Besedilo sporočila: %s\n", num, payload);
-//         String besedilo = String((char)payload[0]);
-
-//         if (besedilo == "1")
-//         {
-//             digitalWrite(LED1pin, 1);
-//         }
-//         if (besedilo == "0")
-//         {
-//             digitalWrite(LED1pin, 0);
-//         }
-//     }
-//     break;
-
-//     default:
-//         break;
-//     }
-// }
+// void webSocketEvent(WStype_t type, uint8_t *payload, size_t length);
 
 // void setup()
 // {
 //     Serial.begin(115200);
 
 //     WiFi.begin(ssid, password);
-
 //     while (WiFi.status() != WL_CONNECTED)
 //     {
 //         delay(500);
-//         Serial.println("Povezovanje na WiFi omrežje v teku...");
+//         Serial.println("Povezovanje z WiFi omrežjem...");
 //     }
 
-//     Serial.println("Povezava z WiFi omrežjem je vzpostavljena.");
-//     Serial.print("IP naslov modula = ");
+//     Serial.println("Povezava z WiFi omrežjem je vzpostavljena");
+//     Serial.print("IP naslov esp32 modula je: ");
 //     Serial.println(WiFi.localIP());
 
-//     server.on("/", handle_root);
-//     server.begin();
-//     Serial.println("HTTP strežnik je zagnan, vpišite IP naslov v brskalnik, npr. http://10.252.254.63/ http in ne https.");
-
-//     webSocket.begin();
-//     webSocket.onEvent(onWebSocketEvent);
+//     webSocket.begin("10.252.254.48", 8811);
+//     webSocket.onEvent(webSocketEvent);
 
 //     pinMode(2, OUTPUT);
+//     pinMode(4, OUTPUT);
+
 //     digitalWrite(2, HIGH);
-//     delay(750);
-//     digitalWrite(2, LOW);
-//     delay(750);
-//     digitalWrite(2, HIGH);
-//     delay(750);
-//     digitalWrite(2, LOW);
-//     delay(750);
+//    delay(300);
+//    digitalWrite(2, LOW);
+//    delay(300);
+// }
+
+// void webSocketEvent(WStype_t type, uint8_t *payload, size_t length)
+// {
+//     switch (type)
+//     {
+//     case WStype_TEXT:
+//     {
+//         StaticJsonDocument<256> doc;
+//         DeserializationError error = deserializeJson(doc, payload, length);
+
+//         if (error)
+//         {
+//             Serial.print(" Napaka pri deserializaciji JSON sporočila: ");
+//             Serial.println(error.c_str());
+//             return;
+//        }
+
+//         const char *tip = doc["tipSporočila"];
+
+//         if (tip != nullptr && strcmp(tip, "LED") == 0)
+//         {
+//             int vrednost = doc["vrednost"];
+//             int pin = doc["pin"];
+
+//             if (pin == 2)
+//            {
+//                 if (vrednost == 0)
+//                 {
+//                     digitalWrite(2, LOW);
+//                 }
+//                 else if (vrednost == 1)
+//                 {
+//                     digitalWrite(2, HIGH);
+//                 }
+//             }
+//         }
+
+//         Serial.print("Prejeto sporočilo preko spletnega vtičnika: ");
+//         Serial.println((char *)payload);
+//         break;
+//     }
+//     default:
+//         break;
+//     }
 // }
 
 // void loop()
 // {
-//     server.handleClient();
 //     webSocket.loop();
+
+//     vrednostFotoupornika = analogRead(nozicaFotoupornika);
+//     Serial.println(vrednostFotoupornika);
+
+//     if (vrednostFotoupornika < 20)
+//     {
+//         digitalWrite(2, HIGH);
+//    }
+//     else
+//     {
+//         digitalWrite(2, LOW);
+//     }
+
+//     if (abs(vrednostFotoupornika - prethodnaVrednost) > 20)
+//     {
+//         dataString = R"({"tipSporočila":"fotoupornik","pin":32,"vrednost":)";
+//         dataString = dataString + String(vrednostFotoupornika) + "}";
+
+//         webSocket.sendTXT(dataString);
+//         prethodnaVrednost = vrednostFotoupornika;
+//     }
+
+//     delay(100);
 // }
