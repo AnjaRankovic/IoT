@@ -1,58 +1,74 @@
 // #include <Arduino.h>
-// #include "WiFi.h"
-// #include "WebServer.h"
-// #include <WiFiAP.h>
+// #include <ArduinoJson.h>
 
-// const char *ssid = "samoanja";
-// const char *password = "samoanja25";
-
-// WebServer server(80);
-
-// String HTML = "<!DOCTYPE html>\n\
-// <html>\n\
-//     <head>\n\
-//         <meta charset='UTF-8'>\n\
-//     </head>\n\
-//     <body>\n\
-//         <h1>Pozdravljen svet na kriziscu tehnologij</h1>\n\
-//     </body>\n\
-// </html>";
-
-// void handle_root()
-// {
-//     server.send(200, "text/html", HTML);
-// }
+// const int LED_PIN = 2;
 
 // void setup()
 // {
 //     Serial.begin(115200);
+//     delay(1000);
 
-//     WiFi.softAP(ssid, password);
-//     delay(100);
+//     pinMode(LED_PIN, OUTPUT);
+//     digitalWrite(LED_PIN, LOW);
 
-//     Serial.println("Vspostavitev programske dostopne tocke na ESP32");
-//     Serial.print("IP naslov esp32 dostopne tocke je: ");
-//     Serial.println(WiFi.softAPIP());
-
-//     server.on("/", handle_root);
-//     server.begin();
-//     Serial.print("HTTP streznik je zagnan, vpisite IP naslov v brskalnik ");
-//     Serial.println(WiFi.softAPIP());
-//     delay(500);
-
-//     pinMode(2, OUTPUT);
-//     digitalWrite(2, HIGH);
-//     delay(750);
-//     digitalWrite(2, LOW);
-//     delay(750);
-//     digitalWrite(2, HIGH);
-//     delay(750);
-//     digitalWrite(2, LOW);
+//     Serial.println("Ceka JSON poruke...");
+//     Serial.println("Primer: {\"tipSporucila\":\"LED\",\"pin\":2,\"vrednost\":1}");
 // }
 
 // void loop()
 // {
+//     if (Serial.available() > 0)
+//     {
+//         String jsonString = Serial.readStringUntil('\n');
+//         jsonString.trim();
 
-//     server.handleClient();
-//     delay(4);
+//         Serial.print("Primljena poruka: ");
+//         Serial.println(jsonString);
+
+//         JsonDocument doc;
+//         DeserializationError error = deserializeJson(doc, jsonString);
+
+//         if (error)
+//         {
+//             Serial.print("Greska pri parsiranju JSON-a: ");
+//             Serial.println(error.f_str());
+//             return;
+//         }
+
+//         if (!doc["tipSporucila"].is<const char *>() ||
+//             !doc["pin"].is<int>() ||
+//             !doc["vrednost"].is<int>())
+//         {
+//             Serial.println("Nedostaju obavezna polja!");
+//             return;
+//         }
+
+//         const char *tipSporucila = doc["tipSporucila"];
+//         int pin = doc["pin"];
+//         int vrednost = doc["vrednost"];
+
+//         if (strcmp(tipSporucila, "LED") == 0)
+//         {
+//             digitalWrite(pin, vrednost);
+
+//             if (vrednost == 1)
+//             {
+//                 Serial.print("OK - LED na pin ");
+//                 Serial.print(pin);
+//                 Serial.println(" je UKLJUCEN");
+//             }
+//             else
+//             {
+//                 Serial.print("OK - LED na pin ");
+//                 Serial.print(pin);
+//                 Serial.println(" je ISKLJUCEN");
+//             }
+//         }
+//         else
+//         {
+//             Serial.println("Nepoznat tip poruke!");
+//         }
+//     }
+
+//     delay(10);
 // }
