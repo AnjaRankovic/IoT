@@ -6,7 +6,7 @@
 // // --- TVOJI PODACI ZA WIFI I SERVER ---
 // const char *ssid = "samoanja";
 // const char *password = "samoanja25";
-// const char *serverIP = "192.168.1.205"; // IP adresa tvog Windows servera
+// const char *serverIP = "192.168.1.205.48"; // IP adresa tvog Windows servera (.48)
 
 // // --- TVOJ TOČAN RASPORED PINOVA SA PLOČICE ---
 // const int pinGlavnaLED = 5;    // Žuta LED
