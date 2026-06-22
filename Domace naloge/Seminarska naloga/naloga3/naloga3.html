@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Zadatek 3 - Touch Senzorji</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .graf-kontejner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .graf-okvir {
+            margin: 10px 0;
+            width: 100%;
+            display: none;
+        }
+
+        .graf-naslov {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #444;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+        }
+
+        .status-led {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+        <h2>Nadin - Zadatek 3: Kontrola preko strojnega tasterja (Pin 12)</h2>
+        <hr>
+
+        <div class="status-led">
+            <div id="status-l1">LED 1 (Pin 5): IZKLOP</div>
+            <div id="status-l2">LED 2 (Pin 14): IZKLOP</div>
+            <div id="status-l3">LED 3 (Ugrađena): IZKLOP</div>
+        </div>
+
+        <div class="graf-kontejner">
+            <div id="okvir1" class="graf-okvir">
+                <div class="graf-naslov">Senzor 1 (Touch Pin 32)</div>
+                <canvas id="platno1" width="560" height="100"></canvas>
+            </div>
+
+            <div id="okvir2" class="graf-okvir">
+                <div class="graf-naslov">Senzor 2 (Touch Pin 15)</div>
+                <canvas id="platno2" width="560" height="100"></canvas>
+            </div>
+
+            <div id="okvir3" class="graf-okvir">
+                <div class="graf-naslov">Senzor 3 (Touch Pin 13)</div>
+                <canvas id="platno3" width="560" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ws = new WebSocket("ws://" + window.location.hostname + ":8888");
+
+        class Graf {
+            constructor(idPlatna, boja) {
+                this.canvas = document.getElementById(idPlatna);
+                this.ctx = this.canvas.getContext("2d");
+                this.boja = boja;
+                this.tocke = [];
+                this.maxTock = this.canvas.width;
+            }
+            dodajVrednost(val) {
+                if (this.tocke.length >= this.maxTock) this.tocke.shift();
+                this.tocke.push(val);
+                this.izrisi();
+            }
+            izrisi() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.strokeStyle = this.boja;
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                for (let i = 0; i < this.tocke.length; i++) {
+                    let y = this.canvas.height - (this.tocke[i] / 100 * this.canvas.height);
+                    if (i === 0) this.ctx.moveTo(i, y);
+                    else this.ctx.lineTo(i, y);
+                }
+                this.ctx.stroke();
+            }
+        }
+
+        let graf1 = new Graf("platno1", "blue");
+        let graf2 = new Graf("platno2", "green");
+        let graf3 = new Graf("platno3", "red");
+
+        function azurirajPrikazGrafova(korak) {
+            document.getElementById("okvir1").style.display = "none";
+            document.getElementById("okvir2").style.display = "none";
+            document.getElementById("okvir3").style.display = "none";
+
+            if (korak >= 1 && korak <= 3) {
+                document.getElementById("okvir1").style.display = "block";
+            }
+            if (korak >= 2 && korak <= 3) {
+                document.getElementById("okvir2").style.display = "block";
+            }
+            if (korak === 3) {
+                document.getElementById("okvir3").style.display = "block";
+            }
+        }
+
+        ws.onmessage = function (event) {
+            let msg = JSON.parse(event.data);
+
+            if (msg.tipSporočila === "korak_grafika") {
+                azurirajPrikazGrafova(msg.korak);
+            }
+            else if (msg.tipSporočila === "touch") {
+                graf1.dodajVrednost(msg.t1);
+                graf2.dodajVrednost(msg.t2);
+                graf3.dodajVrednost(msg.t3);
+
+                document.getElementById("status-l1").innerText = "LED 1 (Pin 5): " + (msg.led1 ? "VKLOP" : "IZKLOP");
+                document.getElementById("status-l2").innerText = "LED 2 (Pin 14): " + (msg.led2 ? "VKLOP" : "IZKLOP");
+                document.getElementById("status-l3").innerText = "LED 3 (Ugrađena): " + (msg.led3 ? "VKLOP" : "IZKLOP");
+            }
+        };
+    </script>
+</body>
+
+</html>

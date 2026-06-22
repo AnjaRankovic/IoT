@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Zadatek 4 - Potenciometer Indikator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 650px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        #status-tekst {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        #barvni-kvadrat {
+            width: 50px;
+            height: 50px;
+            margin: 10px auto;
+            border: 2px solid #333;
+            border-radius: 4px;
+            background-color: gray;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            margin-top: 15px;
+        }
+
+        .info {
+            font-size: 16px;
+            margin-top: 10px;
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+        <h2>Nadin - Zadatek 4: Indikator želenega stanja</h2>
+        <hr>
+
+        <div id="status-tekst">Čakanje na podatke...</div>
+        <div id="barvni-kvadrat"></div>
+
+        <canvas id="platno" width="600" height="250"></canvas>
+
+        <div class="info" id="izpis-vrednosti">
+            Dejanska vrednost: 0 | Želena vrednost: 2048
+        </div>
+    </div>
+
+    <script>
+        let ws = new WebSocket("ws://" + window.location.hostname + ":8888");
+
+        const canvas = document.getElementById("platno");
+        const ctx = canvas.getContext("2d");
+
+        let tocke = [];
+        const maxTock = canvas.width;
+        const želenaVrednost = 2048;
+        const toleranca = 102; // +-5%
+
+        function izrisiSve(trenutnaVrednost) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Izris rdeče črte (Želena vrednost = 2048)
+            let yZelena = canvas.height - (želenaVrednost / 4095 * canvas.height);
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(0, yZelena);
+            ctx.lineTo(canvas.width, yZelena);
+            ctx.stroke();
+
+            // 2. Izris zelene črte (Trenutne vrednosti iz pota)
+            ctx.strokeStyle = "green";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < tocke.length; i++) {
+                let y = canvas.height - (tocke[i] / 4095 * canvas.height);
+                if (i === 0) ctx.moveTo(i, y);
+                else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+        }
+
+        ws.onmessage = function (event) {
+            let msg = JSON.parse(event.data);
+
+            if (msg.tipSporočila === "potenciometer") {
+                let val = msg.vsebina;
+
+                if (tocke.length >= maxTock) tocke.shift();
+                tocke.push(val);
+
+                // Ažuriranje teksta, kvadrata i grafova prema stanju
+                const statusTekst = document.getElementById("status-tekst");
+                const kvadrat = document.getElementById("barvni-kvadrat");
+                const izpis = document.getElementById("izpis-vrednosti");
+
+                izpis.innerText = "Dejanska vrednost: " + val + " | Želena vrednost: " + želenaVrednost;
+
+                if (val < (želenaVrednost - toleranca)) {
+                    statusTekst.innerText = "Prenizko";
+                    statusTekst.style.color = "blue";
+                    kvadrat.style.background = "blue";
+                } else if (val > (želenaVrednost + toleranca)) {
+                    statusTekst.innerText = "Previsoko";
+                    statusTekst.style.color = "red";
+                    kvadrat.style.background = "red";
+                } else {
+                    statusTekst.innerText = "V redu";
+                    statusTekst.style.color = "green";
+                    kvadrat.style.background = "green";
+                }
+
+                izrisiSve(val);
+            }
+        };
+    </script>
+</body>
+
+</html>

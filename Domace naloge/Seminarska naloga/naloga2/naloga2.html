@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Zadatek 2 - Kontrolni Sistem</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 14px;
+            margin-right: 10px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #alarm-status {
+            font-weight: bold;
+            padding: 8px 15px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .ok {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .alarm {
+            background-color: #f8d7da;
+            color: #721c24;
+            animation: blinker 1s linear infinite;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            margin-top: 15px;
+        }
+
+        @keyframes blinker {
+            50% {
+                opacity: 0.5;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+        <h2>Nadin - Zadatek 2: Povratna zanka</h2>
+        <hr>
+        <button onclick="posljiUkaz(1)" style="background-color: #ffe135;">VKLOP GLAVNE LED</button>
+        <button onclick="posljiUkaz(0)">IZKLOP GLAVNE LED</button>
+
+        <p>Status sistema:</p>
+        <div id="alarm-status" class="ok">Sistem deluje pravilno (OK)</div>
+
+        <p id="foto-izpis">Vrednost fotoupornika: -</p>
+        <canvas id="platno-foto" width="450" height="150"></canvas>
+    </div>
+
+    <script>
+        let ws = new WebSocket("ws://" + window.location.hostname + ":8888");
+
+        class Graf {
+            constructor(idPlatna) {
+                this.canvas = document.getElementById(idPlatna);
+                this.ctx = this.canvas.getContext("2d");
+                this.tocke = [];
+                this.maxTock = this.canvas.width;
+            }
+            dodajVrednost(val) {
+                if (this.tocke.length >= this.maxTock) this.tocke.shift();
+                this.tocke.push(val);
+                this.izrisi();
+            }
+            izrisi() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                let pragY = this.canvas.height - (1500 / 4095 * this.canvas.height);
+                this.ctx.strokeStyle = "rgba(255, 0, 0, 0.3)";
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, pragY);
+                this.ctx.lineTo(this.canvas.width, pragY);
+                this.ctx.stroke();
+
+                this.ctx.strokeStyle = "blue";
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                for (let i = 0; i < this.tocke.length; i++) {
+                    let y = this.canvas.height - (this.tocke[i] / 4095 * this.canvas.height);
+                    if (i === 0) this.ctx.moveTo(i, y);
+                    else this.ctx.lineTo(i, y);
+                }
+                this.ctx.stroke();
+            }
+        }
+
+        let grafFoto = new Graf("platno-foto");
+
+        ws.onmessage = function (event) {
+            let msg = JSON.parse(event.data);
+
+            if (msg.tipSporočila === "fotoupornik") {
+                document.getElementById("foto-izpis").innerHTML = "Vrednost fotoupornika: <b>" + msg.vrednost + "</b>";
+                grafFoto.dodajVrednost(msg.vrednost);
+            }
+            else if (msg.tipSporočila === "status") {
+                let statusEl = document.getElementById("alarm-status");
+                if (msg.stanje === "ALARM") {
+                    statusEl.innerText = "ALARM: Glavna LED je odpovedala! Rezerva aktivna!";
+                    statusEl.className = "alarm";
+                } else {
+                    statusEl.innerText = "Sistem deluje pravilno (OK)";
+                    statusEl.className = "ok";
+                }
+            }
+        };
+
+        function posljiUkaz(stanje) {
+            ws.send(JSON.stringify({ "tipSporočila": "LED", "vrednost": stanje }));
+        }
+    </script>
+</body>
+
+</html>

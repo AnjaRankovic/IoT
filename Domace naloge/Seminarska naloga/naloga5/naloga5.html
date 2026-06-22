@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="sl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Zadatek 5 - PI Regulator</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            max-width: 650px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .slider-kontejner {
+            margin: 20px 0;
+            padding: 15px;
+            background: #eee;
+            border-radius: 6px;
+        }
+
+        input[type="range"] {
+            width: 80%;
+            margin-top: 10px;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            margin-top: 15px;
+        }
+
+        .info {
+            font-size: 16px;
+            margin-top: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+        <h2>Nadin - Zadatek 5: Zaprtokrožni PI Regulator</h2>
+        <hr>
+
+        <div class="slider-kontejner">
+            <label for="slider">Nastavi Želeno Vrednost: <span id="izpis-slidera">2048</span></label><br>
+            <input type="range" id="slider" min="0" max="4095" value="2048" oninput="posaljiZelenuVrednost(this.value)">
+        </div>
+
+        <canvas id="platno" width="600" height="250"></canvas>
+        
+        <div class="info" id="izpis-vrednosti">
+            Dejanska: 0 | Želena: 2048 | PWM Izhod: 0
+        </div>
+    </div>
+
+    <script>
+        let ws = new WebSocket("ws://" + window.location.hostname + ":8888");
+        
+        const canvas = document.getElementById("platno");
+        const ctx = canvas.getContext("2d");
+        
+        let stvarnaTocke = [];
+        let zeljenaTocke = [];
+        const maxTock = canvas.width;
+
+        function posaljiZelenuVrednost(val) {
+            document.getElementById("izpis-slidera").innerText = val;
+            let msg = {
+                tipSporočila: "POSTAVI_ZELENO",
+                vrednost: parseInt(val)
+            };
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify(msg));
+            }
+        }
+
+        function izrisiGraf() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Crvena linija - Željena vrijednost
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < zeljenaTocke.length; i++) {
+                let y = canvas.height - (zeljenaTocke[i] / 4095 * canvas.height);
+                if (i === 0) ctx.moveTo(i, y);
+                else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+
+            // Zelena linija - Stvarna vrijednost s potenciometra
+            ctx.strokeStyle = "green";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            for (let i = 0; i < stvarnaTocke.length; i++) {
+                let y = canvas.height - (stvarnaTocke[i] / 4095 * canvas.height);
+                if (i === 0) ctx.moveTo(i, y);
+                else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+        }
+
+        ws.onmessage = function (event) {
+            let msg = JSON.parse(event.data);
+
+            if (msg.tipSporočila === "pi_podatki") {
+                if (stvarnaTocke.length >= maxTock) stvarnaTocke.shift();
+                if (zeljenaTocke.length >= maxTock) zeljenaTocke.shift();
+
+                stvarnaTocke.push(msg.stvarna);
+                zeljenaTocke.push(msg.zeljena);
+
+                document.getElementById("izpis-vrednosti").innerText = 
+                    "Dejanska (Zelena): " + msg.stvarna + 
+                    " | Želena (Rdeča): " + msg.zeljena + 
+                    " | PWM Izhod: " + msg.pwm;
+
+                izrisiGraf();
+            }
+        };
+    </script>
+</body>
+
+</html>
